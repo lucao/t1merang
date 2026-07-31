@@ -1,0 +1,1 @@
+enum ConflictStatus { pending, resolved }

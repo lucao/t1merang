@@ -1,0 +1,17 @@
+enum ActivityTrackerError {
+  titleRequired,
+  titleTooLong,
+  stateLimitReached,
+  stateNameDuplicate,
+  permissionDenied,
+  withdrawalBlocked,
+  responsibilityLimit,
+  conflictInProgress,
+  alreadyVoted,
+  votingWindowClosed,
+  emailInvalid,
+  emailDuplicate,
+  sectorRequired,
+  postContentRequired,
+  adminSafetyViolation,
+}
