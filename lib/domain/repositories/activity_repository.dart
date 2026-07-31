@@ -26,6 +26,9 @@ abstract class ActivityRepository {
   /// Retrieves a single activity by its ID.
   Future<Activity> getActivity(String activityId);
 
+  /// Watches timeline entries for a specific activity in real-time.
+  Stream<List<TimelineEntry>> watchTimeline(String activityId);
+
   /// Adds a timeline entry recording a state transition for an activity.
   Future<void> addTimelineEntry(String activityId, TimelineEntry entry);
 

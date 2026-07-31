@@ -8,6 +8,7 @@ import 'package:activity_tracker/domain/entities/activity_tracker_error.dart';
 import 'package:activity_tracker/domain/entities/permission.dart';
 import 'package:activity_tracker/domain/repositories/access_control_repository.dart';
 import 'package:activity_tracker/domain/repositories/activity_repository.dart';
+import 'package:activity_tracker/domain/repositories/params.dart';
 import 'package:activity_tracker/domain/use_cases/update_activity_title_use_case.dart';
 
 /// Feature: activity-tracker
@@ -25,6 +26,8 @@ class MockActivityRepository extends Mock implements ActivityRepository {}
 
 class MockAccessControlRepository extends Mock
     implements AccessControlRepository {}
+
+class FakeUpdateActivityParams extends Fake implements UpdateActivityParams {}
 
 void main() {
   late MockActivityRepository mockActivityRepository;
@@ -91,6 +94,10 @@ void main() {
       version: random.nextInt(100) + 1,
     );
   }
+
+  setUpAll(() {
+    registerFallbackValue(FakeUpdateActivityParams());
+  });
 
   setUp(() {
     mockActivityRepository = MockActivityRepository();

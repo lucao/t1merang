@@ -142,6 +142,19 @@ class FirestoreActivityRepository implements ActivityRepository {
   }
 
   @override
+  Stream<List<TimelineEntry>> watchTimeline(String activityId) {
+    return _activitiesRef
+        .doc(activityId)
+        .collection('timeline')
+        .orderBy('transitionedAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) =>
+                TimelineEntryModel.fromFirestore(doc.data(), doc.id).toDomain())
+            .toList());
+  }
+
+  @override
   Future<void> addTimelineEntry(String activityId, TimelineEntry entry) async {
     final timelineRef =
         _activitiesRef.doc(activityId).collection('timeline').doc(entry.id);

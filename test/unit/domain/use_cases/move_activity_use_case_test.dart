@@ -344,7 +344,7 @@ void main() {
       when(() => mockActivityRepo.getActivity('activity-1'))
           .thenAnswer((_) async => activity);
       when(() => mockAccessControlRepo.getEffectivePermissions(
-            'user-mover',
+            'user-creator',
             'sector-1',
           )).thenAnswer((_) async => {Permission.move});
       when(() => mockActivityRepo.moveActivity(

@@ -76,7 +76,7 @@ This plan implements a cross-platform Kanban board application using Flutter + F
     - **Property 10: State name validation and case-insensitive uniqueness**
     - **Validates: Requirements 4.2, 4.3**
 
-- [ ] 3. Checkpoint - Ensure all validator tests pass
+- [x] 3. Checkpoint - Ensure all validator tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 4. Implement domain use cases - activity lifecycle
@@ -194,7 +194,7 @@ This plan implements a cross-platform Kanban board application using Flutter + F
     - **Property 16: Discussion category filtering returns only matching posts**
     - **Validates: Requirements 6.7**
 
-- [ ] 6. Checkpoint - Ensure all domain logic tests pass
+- [x] 6. Checkpoint - Ensure all domain logic tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 7. Implement conflict resolution logic
@@ -261,11 +261,11 @@ This plan implements a cross-platform Kanban board application using Flutter + F
     - Integrate FCM for push notification token management
     - _Requirements: 10.1, 10.2, 10.3_
 
-- [ ] 9. Checkpoint - Ensure data layer compiles and basic integration works
+- [x] 9. Checkpoint - Ensure data layer compiles and basic integration works
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Implement Cloud Functions
-  - [ ] 10.1 Implement onActivityStateChange function
+- [x] 10. Implement Cloud Functions
+  - [x] 10.1 Implement onActivityStateChange function
     - Create Cloud Function triggered on Firestore `activities/{activityId}` update
     - Detect state change, calculate duration for previous state, create timeline entry
     - Check for version conflicts (optimistic concurrency violation)
@@ -273,41 +273,41 @@ This plan implements a cross-platform Kanban board application using Flutter + F
     - Queue email notifications (within 5 minutes)
     - _Requirements: 3.2, 3.4, 3.5, 5.1, 10.1, 10.2, 10.4_
 
-  - [ ] 10.2 Implement onPostCreated function
+  - [x] 10.2 Implement onPostCreated function
     - Create Cloud Function triggered on Firestore `activities/{activityId}/posts/{postId}` creation
     - Send in-app notification to responsible users (excluding author) within 10 seconds
     - For Ask_Help posts, send notifications to all users in target sectors within 30 seconds
     - Include truncated content (max 200 chars) in notification body
     - _Requirements: 6.5, 10.3, 10.5_
 
-  - [ ] 10.3 Implement conflict detection and resolution functions
+  - [x] 10.3 Implement conflict detection and resolution functions
     - Create `onConflictCreated` function: start voting timer, notify responsible users
     - Create `resolveConflict` scheduled function: check quorum or deadline, apply resolution
     - Log all conflict events to auditLog collection
     - _Requirements: 13.4, 13.5, 13.6, 13.7, 13.8, 13.9, 13.10, 13.11, 13.12_
 
-  - [ ] 10.4 Implement email notification function with retry
+  - [x] 10.4 Implement email notification function with retry
     - Create `sendEmailNotification` function triggered by Pub/Sub
     - Integrate with SendGrid API for email delivery
     - Retry up to 3 times with 1-minute intervals on failure
     - Update email queue document status
     - _Requirements: 10.1, 10.6_
 
-  - [ ] 10.5 Implement cleanupProductionState scheduled function
+  - [x] 10.5 Implement cleanupProductionState scheduled function
     - Create daily scheduled function to archive activities past Production threshold
     - Read configurable threshold (default 30 days, range 1–365)
     - Filter and archive expired activities
     - _Requirements: 4.7_
 
-- [ ] 11. Implement BLoC state management
-  - [ ] 11.1 Implement AuthBloc
+- [x] 11. Implement BLoC state management
+  - [x] 11.1 Implement AuthBloc
     - Create `AuthBloc` in `lib/presentation/blocs/auth/`
     - Handle Login, Logout, CheckAuth events
     - Manage Authenticated, Unauthenticated, AuthLoading states
     - Integrate with Firebase Auth
     - _Requirements: 11.9_
 
-  - [ ] 11.2 Implement KanbanBloc
+  - [x] 11.2 Implement KanbanBloc
     - Create `KanbanBloc` in `lib/presentation/blocs/kanban/`
     - Handle LoadBoard, MoveActivity, ChangeFilter, RefreshBoard events
     - Subscribe to real-time activity stream filtered by sector
@@ -315,27 +315,27 @@ This plan implements a cross-platform Kanban board application using Flutter + F
     - Check permissions before allowing actions
     - _Requirements: 2.3, 3.1, 9.1, 9.2, 9.4_
 
-  - [ ] 11.3 Implement ActivityBloc
+  - [x] 11.3 Implement ActivityBloc
     - Create `ActivityBloc` in `lib/presentation/blocs/activity/`
     - Handle LoadActivity, UpdateTitle, AddPost, WithdrawResponsibility events
     - Manage activity detail state with discussion, timeline, and responsible users
     - _Requirements: 2.1, 2.2, 6.2, 8.5_
 
-  - [ ] 11.4 Implement ConflictBloc
+  - [x] 11.4 Implement ConflictBloc
     - Create `ConflictBloc` in `lib/presentation/blocs/conflict/`
     - Handle LoadConflicts, CastVote, DismissResolved events
     - Watch active conflicts for current user
     - _Requirements: 13.5, 13.6_
 
-  - [ ] 11.5 Write unit tests for BLoCs
+  - [x] 11.5 Write unit tests for BLoCs
     - Test KanbanBloc state transitions (Loading → Loaded → Error)
     - Test ActivityBloc event handling and state emissions
     - Test ConflictBloc voting flow
     - Test AuthBloc authentication state transitions
     - _Requirements: 2.3, 3.1, 9.1, 13.5_
 
-- [ ] 12. Implement presentation layer (UI)
-  - [ ] 12.1 Implement KanbanBoardPage
+- [x] 12. Implement presentation layer (UI)
+  - [x] 12.1 Implement KanbanBoardPage
     - Create responsive Kanban board with columns per state
     - Implement drag-and-drop for activity state transitions
     - Add sector filter dropdown at top
@@ -344,7 +344,7 @@ This plan implements a cross-platform Kanban board application using Flutter + F
     - Show offline indicator and syncing badge
     - _Requirements: 2.3, 3.1, 9.1, 9.2, 9.4, 9.5, 12.1, 12.2_
 
-  - [ ] 12.2 Implement ActivityDetailPage
+  - [x] 12.2 Implement ActivityDetailPage
     - Create activity detail view with editable title
     - Tabbed interface: Discussion / Timeline / Details
     - Display responsible users list with withdraw option
@@ -352,54 +352,54 @@ This plan implements a cross-platform Kanban board application using Flutter + F
     - Inline validation errors for title edits
     - _Requirements: 2.1, 2.2, 2.4, 5.2, 5.4, 8.5, 8.6, 13.10_
 
-  - [ ] 12.3 Implement Discussion section UI
+  - [x] 12.3 Implement Discussion section UI
     - Create post creation form with category selector
     - Implement Ask_Help sector multi-select (1–10 sectors)
     - Display posts with category badges and timestamps
     - Add category filter controls
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.7, 6.8_
 
-  - [ ] 12.4 Implement ConflictResolutionDialog
+  - [x] 12.4 Implement ConflictResolutionDialog
     - Display conflicting versions side by side
     - Show author, timestamp, and diff highlights for each version
     - Voting buttons with countdown timer showing remaining time
     - Display vote count progress
     - _Requirements: 13.5, 13.6_
 
-  - [ ] 12.5 Implement NotificationPanel
+  - [x] 12.5 Implement NotificationPanel
     - Create in-app notification list with mark-as-read
     - Display badge count on app bar
     - Navigate to relevant activity on notification tap
     - _Requirements: 10.2, 10.3_
 
-  - [ ] 12.6 Implement User Profile and Admin pages
+  - [x] 12.6 Implement User Profile and Admin pages
     - Create user profile page showing responsible activities, posts, and transitions
     - Create admin page for permission management (grant/revoke per user or sector)
     - Create state management page for creating custom states and configuring sort order
     - _Requirements: 7.3, 7.4, 7.5, 4.2, 4.4, 11.1, 11.2_
 
-  - [ ] 12.7 Implement Activity Creation dialog/page
+  - [x] 12.7 Implement Activity Creation dialog/page
     - Create new activity form with title input and validation
     - Display inline error for empty/whitespace-only/too-long title
     - Preserve entered data on validation failure
     - _Requirements: 1.1, 1.6_
 
-- [ ] 13. Implement real-time sync and offline support
-  - [ ] 13.1 Configure Firestore offline persistence
+- [x] 13. Implement real-time sync and offline support
+  - [x] 13.1 Configure Firestore offline persistence
     - Enable Firestore offline persistence for mobile and desktop
     - Implement offline write queue with optimistic UI updates
     - Show visual indicator for offline mode and pending syncs
     - Handle reconnection sync within 10 seconds
     - _Requirements: 12.3, 12.4, 12.6_
 
-  - [ ] 13.2 Implement Firestore security rules
+  - [x] 13.2 Implement Firestore security rules
     - Write security rules enforcing permission checks (View, Create, Modify, Move)
     - Enforce optimistic concurrency version check on activity writes
     - Enforce field-level locking for conflicted activities
     - Enforce permission revocation takes effect on next action
     - _Requirements: 11.3, 11.4, 11.5, 11.6, 11.9, 13.10_
 
-- [ ] 14. Final checkpoint - Ensure all tests pass
+- [x] 14. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

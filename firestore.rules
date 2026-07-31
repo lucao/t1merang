@@ -1,0 +1,212 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper Functions ───────────────────────────────────────────────
+
+    // Returns true if the request is from an authenticated user.
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Returns the authenticated user's UID.
+    function userId() {
+      return request.auth.uid;
+    }
+
+    // Returns the user document for the authenticated user.
+    function getUserDoc() {
+      return get(/databases/$(database)/documents/users/$(userId()));
+    }
+
+    // Returns the user's sectorId from their profile.
+    function getUserSectorId() {
+      return getUserDoc().data.sectorId;
+    }
+
+    // Checks whether a user-level permission document exists for the
+    // authenticated user that includes the specified permission string.
+    function hasUserPermission(permission) {
+      return exists(/databases/$(database)/documents/permissions/$(userId()))
+        && permission in get(/databases/$(database)/documents/permissions/$(userId())).data.permissions;
+    }
+
+    // Checks whether a sector-level permission document exists for the
+    // user's sector that includes the specified permission string.
+    function hasSectorPermission(permission) {
+      let sectorId = getUserSectorId();
+      return exists(/databases/$(database)/documents/permissions/$(sectorId))
+        && permission in get(/databases/$(database)/documents/permissions/$(sectorId)).data.permissions;
+    }
+
+    // Returns true if the user has the given permission.
+    // User-level permissions take precedence: if a user-level permission
+    // document exists, only user-level is checked. Otherwise, falls back
+    // to sector-level permissions.
+    // Requirement 11.2: User-level takes precedence over sector-level.
+    // Requirement 11.9: Permission revocation takes effect on next action.
+    function hasPermission(permission) {
+      return exists(/databases/$(database)/documents/permissions/$(userId()))
+        ? hasUserPermission(permission)
+        : hasSectorPermission(permission);
+    }
+
+    // Returns true if the user holds all four permissions (full admin).
+    function isFullAdmin() {
+      return hasPermission('View')
+        && hasPermission('Create')
+        && hasPermission('Modify')
+        && hasPermission('Move');
+    }
+
+    // ─── Users Collection ───────────────────────────────────────────────
+
+    match /users/{uid} {
+      // Users can read their own profile; anyone authenticated can read
+      // other profiles (needed for displaying nicknames, sectors, etc.)
+      allow read: if isAuthenticated();
+      // Users can only write their own profile
+      allow write: if isAuthenticated() && userId() == uid;
+    }
+
+    // ─── Sectors Collection ─────────────────────────────────────────────
+
+    match /sectors/{sectorId} {
+      allow read: if isAuthenticated();
+      // Only full admins can manage sectors
+      allow write: if isAuthenticated() && isFullAdmin();
+    }
+
+    // ─── States Collection ──────────────────────────────────────────────
+
+    match /states/{stateId} {
+      allow read: if isAuthenticated();
+      // Only full admins can manage states
+      allow write: if isAuthenticated() && isFullAdmin();
+    }
+
+    // ─── Activities Collection ──────────────────────────────────────────
+
+    match /activities/{activityId} {
+      // Requirement 11.3: View permission required to read activities
+      allow read: if isAuthenticated() && hasPermission('View');
+
+      // Requirement 11.4: Create permission required to create activities
+      allow create: if isAuthenticated()
+        && hasPermission('Create')
+        && request.resource.data.version == 1;
+
+      // Requirement 11.5 & 11.6: Modify or Move permission required to
+      // update activities.
+      // Requirement 13.10: Conflicted activities cannot be modified
+      // (except to set isConflicted flag by Cloud Functions — which bypass rules).
+      // Optimistic concurrency: version must increment by exactly 1.
+      allow update: if isAuthenticated()
+        && (hasPermission('Modify') || hasPermission('Move'))
+        && request.resource.data.version == resource.data.version + 1
+        && (
+          // If the activity is NOT conflicted, allow the update
+          resource.data.isConflicted == false
+          // If the activity IS conflicted, only allow toggling isConflicted
+          // back to false (conflict resolution by Cloud Functions bypasses
+          // rules anyway, but this provides defense-in-depth)
+          || (
+            resource.data.isConflicted == true
+            && request.resource.data.isConflicted == false
+          )
+        );
+
+      // Activities should not be deleted by clients (archive via Cloud Functions)
+      allow delete: if false;
+
+      // ─── Timeline Subcollection ─────────────────────────────────────
+
+      match /timeline/{entryId} {
+        // Readable by anyone who can view the parent activity
+        allow read: if isAuthenticated() && hasPermission('View');
+        // Timeline entries are created by Cloud Functions (admin SDK bypasses rules)
+        // but we also allow authenticated users with Modify/Move to write timeline
+        allow create: if isAuthenticated()
+          && (hasPermission('Modify') || hasPermission('Move'));
+        allow update, delete: if false;
+      }
+
+      // ─── Posts Subcollection ────────────────────────────────────────
+
+      match /posts/{postId} {
+        // Readable by anyone who can view the parent activity
+        allow read: if isAuthenticated() && hasPermission('View');
+        // Requirement 11.4: Create permission required to create posts
+        allow create: if isAuthenticated()
+          && hasPermission('Create')
+          && request.resource.data.authorId == userId();
+        // Posts are immutable once created
+        allow update, delete: if false;
+      }
+    }
+
+    // ─── Conflicts Collection ───────────────────────────────────────────
+
+    match /conflicts/{conflictId} {
+      // Readable by authenticated users (responsible users need to see conflicts)
+      allow read: if isAuthenticated();
+      // Conflicts are created by Cloud Functions (admin SDK bypasses rules).
+      // Users can update to cast votes — restricted to adding their own vote.
+      allow create: if false;
+      allow update: if isAuthenticated()
+        && hasPermission('View');
+      allow delete: if false;
+    }
+
+    // ─── Notifications Collection ───────────────────────────────────────
+
+    match /notifications/{notificationId} {
+      // Users can only read their own notifications
+      allow read: if isAuthenticated()
+        && resource.data.userId == userId();
+      // Users can update their own notifications (mark as read)
+      allow update: if isAuthenticated()
+        && resource.data.userId == userId();
+      // Notifications are created by Cloud Functions
+      allow create, delete: if false;
+    }
+
+    // ─── Permissions Collection ─────────────────────────────────────────
+
+    match /permissions/{permissionId} {
+      // Anyone authenticated can read permissions (needed for UI to check access)
+      allow read: if isAuthenticated();
+      // Only full admins can write permissions
+      // Requirement 11.7 is enforced at the application layer (Cloud Functions)
+      // because security rules cannot perform aggregate queries to check if
+      // at least one full admin remains.
+      allow write: if isAuthenticated() && isFullAdmin();
+    }
+
+    // ─── Email Queue Collection ─────────────────────────────────────────
+    // Managed exclusively by Cloud Functions (admin SDK bypasses rules).
+    // Clients have no access.
+
+    match /emailQueue/{emailId} {
+      allow read, write: if false;
+    }
+
+    // ─── Audit Log Collection ───────────────────────────────────────────
+    // Managed exclusively by Cloud Functions (admin SDK bypasses rules).
+    // Clients have no access.
+
+    match /auditLog/{logId} {
+      allow read, write: if false;
+    }
+
+    // ─── Archived Activities Collection ─────────────────────────────────
+    // Managed exclusively by Cloud Functions (admin SDK bypasses rules).
+    // Clients may read archived activities with View permission.
+
+    match /archivedActivities/{activityId} {
+      allow read: if isAuthenticated() && hasPermission('View');
+      allow write: if false;
+    }
+  }
+}
